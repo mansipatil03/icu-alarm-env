@@ -118,4 +118,4 @@ endpoints:
 baseline_script: inference.py
 dockerfile: Dockerfile
 readme: README.md
-entrypoint: server.app:main
+entrypoint: server/app.py
