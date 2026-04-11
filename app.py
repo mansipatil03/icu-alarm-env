@@ -58,8 +58,6 @@ def verify(score: float):
     return {"score": score, "valid": verify_score(score)}
 
 def main():
-
-    uvicorn.run("server.app:main", host="0.0.0.0", port=7860, reload=False)
-
+    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
 if __name__ == "__main__":
     main()
