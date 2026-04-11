@@ -9,7 +9,7 @@ from models import Action, Observation, StepResult, EnvState
 from env import ICUAlarmEnv, verify_score
 import uvicorn
 
-app = FastAPI(
+main = FastAPI(
     title="ICU Alarm Fatigue Reducer — OpenEnv",
     description="An AI environment where agents learn to distinguish real ICU emergencies from false alarms.",
     version="1.0.0"
