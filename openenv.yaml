@@ -1,0 +1,120 @@
+name: icu-alarm-fatigue-reducer
+version: "1.0.0"
+description: >
+  An OpenEnv environment where an AI agent reviews ICU patient vitals and alarm
+  history to classify each alarm as a real emergency or false alarm.
+  Tackles the critical real-world problem of alarm fatigue in ICUs,
+  where 99% of alarms are false — causing nurses to miss real emergencies.
+
+tags:
+  - openenv
+  - medical
+  - healthcare
+  - icu
+  - classification
+  - alarm-fatigue
+
+author: ICU-OpenEnv Team
+license: MIT
+
+tasks:
+  - id: easy
+    name: Single Vital Spike
+    description: >
+      Classify a single abnormal vital sign reading as a real emergency or false alarm.
+      Context clues indicate whether the reading is a sensor artifact or a genuine alert.
+    difficulty: easy
+    max_steps: 1
+    reward_range: [0.0, 1.0]
+    success_threshold: 0.8
+
+  - id: medium
+    name: Multi-Vital Pattern Analysis
+    description: >
+      Analyze multiple alarm events across different vital signs in a 10-minute window.
+      The agent must identify patterns to determine if the overall situation is an emergency.
+    difficulty: medium
+    max_steps: 1
+    reward_range: [0.0, 1.0]
+    success_threshold: 0.7
+
+  - id: hard
+    name: Full 24-Hour Patient History
+    description: >
+      Given a complete 24-hour patient record including medications, diagnoses,
+      vital trends, and alarm logs, classify the alarm and recommend a specific nurse action.
+    difficulty: hard
+    max_steps: 1
+    reward_range: [0.0, 1.0]
+    success_threshold: 0.6
+
+observation_space:
+  type: object
+  properties:
+    task_level:
+      type: string
+      enum: [easy, medium, hard]
+    patient_id:
+      type: string
+    prompt:
+      type: string
+      description: Natural language task description for the agent
+    vitals:
+      type: object
+      properties:
+        heart_rate: {type: number}
+        systolic_bp: {type: number}
+        diastolic_bp: {type: number}
+        spo2: {type: number}
+        respiratory_rate: {type: number}
+        temperature: {type: number}
+    alarm_history:
+      type: array
+      items:
+        type: object
+        properties:
+          timestamp: {type: string}
+          alarm_type: {type: string}
+          value: {type: number}
+          threshold: {type: number}
+          was_acknowledged: {type: boolean}
+    metadata:
+      type: object
+
+action_space:
+  type: object
+  properties:
+    classification:
+      type: string
+      enum: [real, false]
+      description: Agent's classification of the alarm
+    confidence:
+      type: number
+      minimum: 0.0
+      maximum: 1.0
+    explanation:
+      type: string
+      description: Clinical reasoning (optional, grants bonus score)
+    recommended_action:
+      type: string
+      description: Recommended nurse action (required for hard task)
+
+reward:
+  type: float
+  range: [0.0, 1.0]
+  description: >
+    Correct classification = base 0.6-0.8.
+    Bonus for explanation quality and confidence calibration = up to +0.4.
+    Missing a real emergency = 0.0 (patient safety penalty).
+    False positive = 0.1.
+
+endpoints:
+  reset: POST /reset?task_level={easy|medium|hard}&session_id={id}
+  step: POST /step?session_id={id}
+  state: GET /state?session_id={id}
+  health: GET /health
+  verify_score: GET /verify_score?score={float}
+
+baseline_script: inference.py
+dockerfile: Dockerfile
+readme: README.md
