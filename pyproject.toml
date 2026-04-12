@@ -21,7 +21,7 @@ Homepage = "https://huggingface.co/spaces/mansi-patil/icu-alarm-env"
 Repository = "https://github.com/mansipatil03/ICU-Alarm-Fatigue-Reducer-"
 
 [project.scripts]
-server = "app:main"
+server = "server.app:main"
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]

@@ -1,35 +1,55 @@
 """
-FastAPI server exposing OpenEnv-compatible endpoints for ICU Alarm Fatigue Reducer
+FastAPI server exposing OpenEnv-compatible endpoints for ICU Alarm Fatigue Reducer.
 """
 
+import argparse
+
+import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from models import Action, Observation, StepResult, EnvState
-from env import ICUAlarmEnv, verify_score
-import uvicorn
+
+try:
+    from ..env import ICUAlarmEnv, verify_score
+    from ..models import Action, EnvState, Observation, StepResult
+except ImportError:
+    from env import ICUAlarmEnv, verify_score
+    from models import Action, EnvState, Observation, StepResult
+
 
 app = FastAPI(
-    title="ICU Alarm Fatigue Reducer — OpenEnv",
+    title="ICU Alarm Fatigue Reducer - OpenEnv",
     description="An AI environment where agents learn to distinguish real ICU emergencies from false alarms.",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 _envs: dict[str, ICUAlarmEnv] = {}
 
+
 @app.get("/")
 def root():
-    return {"message": "ICU Alarm Fatigue Reducer API is running 🚑", "docs": "/docs"}
+    return {"message": "ICU Alarm Fatigue Reducer API is running", "docs": "/docs"}
+
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "healthy"}
+
+
+@app.get("/metadata")
+def metadata():
+    return {
+        "name": "icu-alarm-fatigue-reducer",
+        "description": app.description,
+        "version": app.version,
+    }
+
 
 @app.post("/reset", response_model=Observation)
 def reset(session_id: str = "default", task_level: str = "easy"):
@@ -38,14 +58,16 @@ def reset(session_id: str = "default", task_level: str = "easy"):
     _envs[session_id] = ICUAlarmEnv(task_level=task_level)
     return _envs[session_id].reset()
 
+
 @app.post("/step", response_model=StepResult)
 def step(action: Action, session_id: str = "default"):
     if session_id not in _envs:
         raise HTTPException(400, "No active session. Call /reset first.")
     try:
         return _envs[session_id].step(action)
-    except RuntimeError as e:
-        raise HTTPException(400, str(e))
+    except RuntimeError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
 
 @app.get("/state", response_model=EnvState)
 def state(session_id: str = "default"):
@@ -53,12 +75,22 @@ def state(session_id: str = "default"):
         raise HTTPException(400, "No active session. Call /reset first.")
     return _envs[session_id].state()
 
+
 @app.get("/verify_score")
 def verify(score: float):
     return {"score": score, "valid": verify_score(score)}
 
-def main():
-    uvicorn.run("app:app", host="0.0.0.0", port=7860, reload=False)
-    
+
+def main(host: str = "0.0.0.0", port: int = 7860):
+    uvicorn.run(app, host=host, port=port, reload=False)
+
+
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--host", default="0.0.0.0")
+    parser.add_argument("--port", type=int, default=7860)
+    args = parser.parse_args()
+    if args.host == "0.0.0.0" and args.port == 7860:
+        main()
+    else:
+        main(host=args.host, port=args.port)
