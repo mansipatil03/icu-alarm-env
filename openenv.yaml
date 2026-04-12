@@ -119,3 +119,4 @@ baseline_script: inference.py
 dockerfile: Dockerfile
 readme: README.md
 entrypoint: app:main
+
