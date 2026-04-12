@@ -1,6 +1,6 @@
-"""
-FastAPI server exposing OpenEnv-compatible endpoints for ICU Alarm Fatigue Reducer
-"""
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,7 +8,7 @@ from models import Action, Observation, StepResult, EnvState
 from env import ICUAlarmEnv, verify_score
 import uvicorn
 
-# CRITICAL: This must be named 'main' for the validator to find it
+#Validator imports 'main' from server.app — so main must be the FastAPI instance
 main = FastAPI(
     title="ICU Alarm Fatigue Reducer — OpenEnv",
     description="An AI environment where agents learn to distinguish real ICU emergencies from false alarms.",
@@ -22,45 +22,33 @@ main.add_middleware(
     allow_headers=["*"]
 )
 
-_envs: dict[str, ICUAlarmEnv] = {}
-
-@main.get("/")
-def root():
-    return {"message": "ICU Alarm Fatigue Reducer API is running 🚑", "docs": "/docs"}
+_envs = {}
 
 @main.get("/health")
 def health():
     return {"status": "ok"}
 
-@main.post("/reset", response_model=Observation)
+@main.post("/reset")
 def reset(session_id: str = "default", task_level: str = "easy"):
     if task_level not in ["easy", "medium", "hard"]:
         raise HTTPException(400, "task_level must be easy, medium, or hard")
     _envs[session_id] = ICUAlarmEnv(task_level=task_level)
     return _envs[session_id].reset()
 
-@main.post("/step", response_model=StepResult)
+@main.post("/step")
 def step(action: Action, session_id: str = "default"):
     if session_id not in _envs:
-        raise HTTPException(400, "No active session. Call /reset first.")
+        raise HTTPException(400, "Call /reset first")
     try:
         return _envs[session_id].step(action)
     except RuntimeError as e:
         raise HTTPException(400, str(e))
 
-@main.get("/state", response_model=EnvState)
+@main.get("/state")
 def state(session_id: str = "default"):
     if session_id not in _envs:
-        raise HTTPException(400, "No active session. Call /reset first.")
+        raise HTTPException(400, "Call /reset first")
     return _envs[session_id].state()
 
-@main.get("/verify_score")
-def verify(score: float):
-    return {"score": score, "valid": verify_score(score)}
-
-def start():
-    # Points to: server folder -> app.py file -> main variable
-    uvicorn.run("server.app:main", host="0.0.0.0", port=7860, reload=False)
-
 if __name__ == "__main__":
-    start()
+    uvicorn.run("server.app:main", host="0.0.0.0", port=7860, reload=False)
