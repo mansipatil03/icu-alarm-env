@@ -4,7 +4,7 @@ description: >
   An OpenEnv environment where an AI agent reviews ICU patient vitals and alarm
   history to classify each alarm as a real emergency or false alarm.
   Tackles the critical real-world problem of alarm fatigue in ICUs,
-  where 99% of alarms are false — causing nurses to miss real emergencies.
+  where 99% of alarms are false - causing nurses to miss real emergencies.
 
 tags:
   - openenv

@@ -18,7 +18,7 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://huggingface.co/spaces/mansi-patil/icu-alarm-env"
-Repository = "https://github.com/mansipatil03/ICU-Alarm-Fatigue-Reducer-"
+Repository = "https://github.com/mansipatil03/icu-alarm-env"
 
 [project.scripts]
 server = "server.app:main"
