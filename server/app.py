@@ -8,7 +8,7 @@ from models import Action, Observation, StepResult, EnvState
 from env import ICUAlarmEnv, verify_score
 import uvicorn
 
-# The validator specifically looks for 'main'
+# CRITICAL: This must be named 'main' for the validator to find it
 main = FastAPI(
     title="ICU Alarm Fatigue Reducer — OpenEnv",
     description="An AI environment where agents learn to distinguish real ICU emergencies from false alarms.",
@@ -59,7 +59,7 @@ def verify(score: float):
     return {"score": score, "valid": verify_score(score)}
 
 def start():
-    # This matches the folder structure (server) and the variable name (main)
+    # Points to: server folder -> app.py file -> main variable
     uvicorn.run("server.app:main", host="0.0.0.0", port=7860, reload=False)
 
 if __name__ == "__main__":
