@@ -2,7 +2,7 @@ Try it here: https://huggingface.co/spaces/mansi-patil/icu-alarm-env
 
 ---
 title: ICU Alarm Fatigue Reducer
-emoji: 🚑
+
 colorFrom: blue
 colorTo: pink
 sdk: docker
